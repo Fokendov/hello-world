@@ -1,4 +1,4 @@
-/* Arthur Böckmann Grossi (275607), Cassiano Translatti Furlani(278038) e Ian Fischer Schilling(275603)
+/* Arthur Böckmann Grossi (275607), Cassiano Translatti Furlani(278038) e Ian Fischer Schilling(#)
 */
 
 #include <stdio.h>
@@ -15,9 +15,9 @@
 #define FALSE 0
 
 #define MAX_STU_CHAR 100
-#define STU1 "Arthur Bockmann Grossi - 275607"
-#define STU2 "Cassiano Translatti Furlani - 278038"
-#define STU3 "Ian Fischer Schilling - 275603"
+#define STU1 "Arthur Bockmann Grossi - 275000\n"
+#define STU2 "Cassiano Translatti Furlani - 278038\n"
+#define STU3 "Ian Fischer Schilling - 275001\n"
 
 /*	GLOBAL VARIABLES */
 
@@ -33,8 +33,7 @@ ucontext_t currentContext;
 TCB_t *running = NULL; //Current running thread
 
 /* STUCTURE */
-typedef struct waitingThread
-{
+typedef struct waitingThread{
 	int waitingTID;
 	int waitedTID;
 } waitThread;
@@ -95,7 +94,7 @@ int initialise()
 	return 0;
 }
 
-/*When a thread finishes, a thread might be waiting
+/*When a thread finishes, some thread(s) might be waiting
 	this function changes the current running thread
 */
 void* exitingThread(){
@@ -107,16 +106,12 @@ void* exitingThread(){
 	if(wThread != NULL)
 	{//  A thread was waiting for this one to finish
 		waitingThread = getThread(wThread->waiting_tid, blocked);
-		AppendFila2(ready, waitingThread);
+	}
+	else
+	{
+		
 	}
 	
-	nextThread = dispatcher();
-	if(nextThread != NULL)
-		runThread(nextThread);
-	else
-		printf("Error: could not dispatch thread\n");
-		
-	return 0;	
 }
 
 TCB_t* getThread(int tid, PFILA2 queue)
@@ -179,8 +174,7 @@ int runThread(TCB_t* thread)
 	Searches in the wait queue if the thread with the parameter tid is already being waited by someone else
 */
 waitThread* searchWaitQueue(int tid)
-{	
-	waitThread* wThread = calloc(1, sizeof(waitThread*));
+{	waitThread* wThread = calloc(1, sizeof(waitThread*));
 	FirstFila2(waiting);
 	
 	while( GetAtIteratorFila2(waiting) != NULL)
@@ -205,7 +199,7 @@ int insertNewWait(int waitingTID, int waitedTID)
 	}
 	else
 	{
-		printf("Error at insertNewWait could not allocate memory\n");
+		printf("Error at inseertNewWait could not allocate memory\n");
 		return -1;
 	}
 }
@@ -213,44 +207,18 @@ int insertNewWait(int waitingTID, int waitedTID)
 						MAIN FUNCTIONS
 ------------------------------------------------------------------------------------*/
 
+/*		NOT FINISHED		*/
 int ccreate(void *(*start)(void *), void *arg, int prio)
 {
-	if (!systemReady)
+	if (firstThread)
 	{
 		if(initialise != 0)//Error initializing
 		{
 			puts("Error ccreate: could not initialise system\n");
 			return -1;
 		}		
-	}
-	TCB_t *newThread;
-	int newTid = Random2();
-	
-	if( (newThread = calloc(1, sizeof(TCB_t*) )
-	{
-		//Set new thread attributes
-		newThread->tid = newTid;
-		newThread->state = PROCST_APTO;
-		newThread->prio = 0;
 		
-		getcontext(&(newThread->context));
-		newThread->context.uc_link = &exitContext;
-		newThread->context.uc_stack.ss_sp = malloc(SIGSTKSZ);
-		newThread->context.uc_stack.ss_size = SIGSTKSZ;
-		makecontext(&(newThread->context), (void (*)())start, 1, arg);
 		
-		if( AppendFila2(ready, newThread) == 0 )
-			return tid;
-		else
-		{
-			printf("Error: could not insert new Thread into ready queue\n");
-			return -1;
-		}
-		
-	else
-	{
-		printf("Error: could not allocate memory for creating thread\n");
-		return -1;
 	}
 	
 }
@@ -260,14 +228,6 @@ int ccreate(void *(*start)(void *), void *arg, int prio)
 */
 int cyield()
 {
-	if (!systemReady)
-	{
-		if(initialise != 0)//Error initializing
-		{
-			puts("Error ccreate: could not initialise system\n");
-			return -1;
-		}		
-	}
 	TCB_T *nextThread;
 	
 	running->state = PROCST_APTO;
@@ -293,60 +253,27 @@ int cyield()
 	}
 }
 
-
+/*		NOT FINISHED		*/
 int cjoin(int tid)
 {
-	//Check if the system is ready
-	
-	if (!systemReady)
-	{
-		if (initialise() != 0)
-		{
-			printf("Error ccreate: could not init system");
-			return -1;
-		}
-	}	
+	//Initialise yet to be implemented 
 	
 	TCB_t *nextThread = calloc(1, sizeof(TCB_t*)); 
-	nextThread = dispatcher();//Gets next thread in the ready queue
+	nextThread = dispatcher();
 	
-	if(nextThread != NULL)//there is a thread ready
+	if(nextThread != NULL)
 	{
 		if( searchWaitQueue(tid) == NULL) //No thread waiting for parameter tid
 		{	
 			if(insertNewWait(running->tid, tid) == 0)
 			{
-				//Blocks current thread
-				running->state = PROCST_BLOQ;
-				AppendFila2(ready, running);
-				
-				runThread(nextThread);
-				return 0;
-			}
-			else if (running == NULL)
-			{
-				runThread(nextThread);
-				return 0;
-			}
-			else
-			{
-				printf("Error: could not insert waiter Thread\n");
-				return -1;
-			}
-		}
-		else
-		{
-			printf("Error: Thread was already joined by another\n");
-			return -1;
-		}
-	}
-	else //No thread available
-	{
-		printf("Error: Could not find thread to join\n");
-		return -1;
-	}
+				//Block running thread
+			
+			
+		
 }
 
+/* 		NOT FINISHED		*/
 int cindentify(char *name, int size){
 	char student[MAX_STU_CHAR] = "";
 	int i;
@@ -364,21 +291,11 @@ int cindentify(char *name, int size){
 			name[i] = student[i];
 		return 0;
 	}
-	else if( size >= 9) //At least 1 characters for each
+	else if( size >= 9) //At least 3 characters for each
 	{
 		letters = size/3 - 2;
-		for(i = 0; i < letters; i++)
-		{
-			name[i] = student[i];
-			
-			name[i + letters + 1] = student[i + st2]
-			
-			name[i + 2*(letters + 1)] = student[i + st3];
-		}
 		
-		name[letters] = '\n';
-		name[2*(letters) +1]= '\n';
-		name[i + 2*(letters + 1) + 1] = '\0';
+		
 	}
 	else 
 		return -1;
@@ -386,5 +303,72 @@ int cindentify(char *name, int size){
 }
 
 
+/*----------------------------------------------------------------------------------
+						SEMAPHORE FUNCTIONS
+------------------------------------------------------------------------------------*/
 
 
+int csem_init(csem_t *sem, int count){
+
+	sem->count = count;
+	sem->fila = calloc(1, sizeof(PFILA2))
+
+	if(CreateFila2(sem->fila)==0){
+		return 0;
+	}else{
+		printf("Error trying to initialize semaphore queue");
+		return -1;
+	}
+}
+
+int cwait(csem_t *sem){
+	TCB_t* nextThread= calloc(1, sizeof(TCB_t*));
+	
+	if(sem->PFILA2!=NULL){
+		if((sem->count)>0){
+			sem->count=(sem->count-1);
+			return 0;
+		}else if((sem->count)<=0){
+
+			//block current thread
+			running->state=PROCST_BLOQ;
+			//add thread to semaphore's queue
+			if(AppendFila2(sem->fila, running)){
+				printf("Error: could not insert blocked thread in semaphore's queue");
+				return -1;
+			}
+			//run next thread
+			nextThread = dispatcher();
+			if(nextThread!=NULL){
+				runThread(nextThread);
+			}
+			return 0;
+		}
+	}else{
+		printf("Error: semaphore's queue was not initialized");
+		return -1;
+	}
+}
+
+int csignal(csem_t *sem){
+	TCB_t* firstThread= calloc(1, sizeof(TCB_t*));
+
+	if(sem->PFILA2!=NULL){
+		sem->count=(sem->count+1);
+
+		//turns first thread from semaphore's queue to ready state
+		FirstFila2(sem->PFILA2);
+		firstThread=(TCB_t*)GetAtIteratorFila2(sem->PFILA2);
+		DeleteAtIteratorFila2(sem->PFILA2);
+		firstThread->state=PROCST_APTO;
+
+		//
+
+
+	}else{
+		printf("Error: semaphore's queue was not initialized");
+		return -1;
+	}
+
+	return 0;
+}
