@@ -264,7 +264,7 @@ int cyield()
 	{
 		if(initialise != 0)//Error initializing
 		{
-			puts("Error ccreate: could not initialise system\n");
+			puts("Error cyield: could not initialise system\n");
 			return -1;
 		}		
 	}
@@ -302,7 +302,7 @@ int cjoin(int tid)
 	{
 		if (initialise() != 0)
 		{
-			printf("Error ccreate: could not init system");
+			printf("Error cjoin: could not init system");
 			return -1;
 		}
 	}	
@@ -318,7 +318,7 @@ int cjoin(int tid)
 			{
 				//Blocks current thread
 				running->state = PROCST_BLOQ;
-				AppendFila2(ready, running);
+				AppendFila2(blocked, running);
 				
 				runThread(nextThread);
 				return 0;
