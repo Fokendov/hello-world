@@ -316,7 +316,7 @@ int csem_init(csem_t *sem, int count){
 	if(CreateFila2(sem->fila)==0){
 		return 0;
 	}else{
-		printf("Error trying to initialize semaphore queue");
+		printf("Error trying to initialize semaphore's queue");
 		return -1;
 	}
 }
@@ -326,49 +326,81 @@ int cwait(csem_t *sem){
 	
 	if(sem->PFILA2!=NULL){
 		if((sem->count)>0){
-			sem->count=(sem->count-1);
+			sem->count--;
 			return 0;
 		}else if((sem->count)<=0){
 
 			//block current thread
 			running->state=PROCST_BLOQ;
+			if(AppendFila2(blocked, running)){
+				printf("Error: could not insert blocked thread in blocked queue");
+				return -1;
+			}
+
 			//add thread to semaphore's queue
 			if(AppendFila2(sem->fila, running)){
 				printf("Error: could not insert blocked thread in semaphore's queue");
 				return -1;
 			}
+
 			//run next thread
 			nextThread = dispatcher();
 			if(nextThread!=NULL){
 				runThread(nextThread);
 			}
-			return 0;
 		}
 	}else{
 		printf("Error: semaphore's queue was not initialized");
 		return -1;
 	}
+
+	return 0;
 }
 
 int csignal(csem_t *sem){
-	TCB_t* firstThread= calloc(1, sizeof(TCB_t*));
+	TCB_t* firstThread_sem= calloc(1, sizeof(TCB_t*));
 
 	if(sem->PFILA2!=NULL){
-		sem->count=(sem->count+1);
+		//checks if the queue is empty
+		if(FirstFila2(sem->PFILA2)){
+			//remove first thread from semaphore's queue
+			firstThread_sem=(TCB_t*)GetAtIteratorFila2(sem->PFILA2);
+			DeleteAtIteratorFila2(sem->PFILA2);
 
-		//turns first thread from semaphore's queue to ready state
-		FirstFila2(sem->PFILA2);
-		firstThread=(TCB_t*)GetAtIteratorFila2(sem->PFILA2);
-		DeleteAtIteratorFila2(sem->PFILA2);
-		firstThread->state=PROCST_APTO;
+			//remove thread from blocked queue
+			if(removefromqueue(firstThread_sem, blocked)){
+				printf("Error: could not remove thread from blocked queue");
+				return -1;
+			}
 
-		//
-
-
+			//and insert in ready queue;
+			firstThread_sem->state=PROCST_APTO;
+			if(AppendFila2(firstThread_sem, ready)){
+				printf("Error: could not insert thread from semaphore's queue in ready queue");
+				return -1
+			}
+		}
+	sem->count++;
 	}else{
 		printf("Error: semaphore's queue was not initialized");
 		return -1;
 	}
+	return 0;
+}
 
+int removefromqueue(TCB_t* thread, PFILA2 queue){
+	TCB_t* iterator = calloc(1, sizeof(TCB_t*));
+
+	FirstFila2(queue);
+	while(GetAtIteratorFila2(queue)!=NULL){
+		iterator = GetAtIteratorFila2(queue);
+		if(thread->tid==iterator->tid){
+			if(DeleteAtIteratorFila2(queue)){
+				return -1;
+			}
+		}else{
+			NextFila2(queue);
+		}
+	}
 	return 0;
 }
