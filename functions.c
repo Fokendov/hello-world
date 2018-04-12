@@ -4,7 +4,7 @@ int csuspend(int tid){
 
 	thread=removefromqueue(tid, ready);
 	
-	if(thread=!=NULL){
+	if(thread != NULL){
 		//thread was in ready queue
 		
 		if(AppendFila2(suspendedReady, thread)){
@@ -20,7 +20,7 @@ int csuspend(int tid){
 		//thread was in blocked queue
 
 		if(AppendFila2(suspendedBlocked, thread)){
-			printf("Error: could not insert thread in suspendedReady queue");
+			printf("Error: could not insert thread in suspendedBlocked queue");
 			return -1;
 		}else{
 			return 0;
@@ -28,6 +28,38 @@ int csuspend(int tid){
 	}
 	
 	printf("Error: could not find given tid in ready or blocked queue");
+	return -1;
+}
+
+int cresume(int tid){
+	TCB_t* thread = calloc(1, sizeof(TCB_t*));
+
+	thread=removefromqueue(tid, suspendedReady);
+	
+	if(thread != NULL){
+		//thread was in suspendedReady queue
+		
+		if(AppendFila2(ready, thread)){
+			printf("Error: could not insert thread in ready queue");
+			return -1;
+		}else{
+			return 0;
+		}
+	}
+	
+	thread = removefromqueue(tid, suspendedBlocked);
+	if(thread != NULL){
+		//thread was in suspendedBlocked queue
+
+		if(AppendFila2(blocked, thread)){
+			printf("Error: could not insert thread in blocked queue");
+			return -1;
+		}else{
+			return 0;
+		}
+	}
+	
+	printf("Error: could not find given tid in suspendedReady or suspendedBlocked queue");
 	return -1;
 }
 
