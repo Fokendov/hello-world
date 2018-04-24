@@ -102,21 +102,19 @@ void* exitingThread(){
 	waitThread *wThread;
 	TCB_t *waitingThread, *nextThread;
 	
-	wThread = removeWaitingThread(running->tid);
+	wThread = searchWaitQueue(running->tid);//Found a pair of waiting and waited thread
 	
 	if(wThread != NULL)
 	{//  A thread was waiting for this one to finish
 		waitingThread = getThread(wThread->waiting_tid, blocked);
 		AppendFila2(ready, waitingThread);
 	}
-	
+	//No thread waiting, calls next ready thread
 	nextThread = dispatcher();
 	if(nextThread != NULL)
 		runThread(nextThread);
 	else
 		printf("Error: could not dispatch thread\n");
-		
-	return 0;	
 }
 
 TCB_t* getThread(int tid, PFILA2 queue)
@@ -187,6 +185,7 @@ waitThread* searchWaitQueue(int tid)
 	{
 		wThread = GetAtIteratorFila2(waiting);
 		if( wThread->waitedTid == tid ) //Found thread
+			DeleteAtIteratorFila2(waiting);
 			return wThread;
 		NextFila2(waiting);
 	}
@@ -314,7 +313,7 @@ int cjoin(int tid)
 	{
 		if( searchWaitQueue(tid) == NULL) //No thread waiting for parameter tid
 		{	
-			if(insertNewWait(running->tid, tid) == 0)
+			if(insertNewWait(running->tid, tid) == 0) //Successful
 			{
 				//Blocks current thread
 				running->state = PROCST_BLOQ;
