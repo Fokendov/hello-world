@@ -43,6 +43,7 @@ typedef struct waitingThread
 
 void* exitingThread();
 TCB_t *getThread(int tid, PFILA2 queue);
+waitThread* searchWaitQueue(int tid);
 
 int initialise()
 {	//Initialise queues
@@ -106,7 +107,9 @@ void* exitingThread(){
 	
 	if(wThread != NULL)
 	{//  A thread was waiting for this one to finish
+		DeleteAtIterator(waiting); // Removes waiting thread from the waiting line
 		waitingThread = getThread(wThread->waiting_tid, blocked);
+		waitingThread->state = PROCST_APTO;
 		AppendFila2(ready, waitingThread);
 	}
 	//No thread waiting, calls next ready thread
@@ -128,7 +131,10 @@ TCB_t* getThread(int tid, PFILA2 queue)
 		{
 			thread = GetAtIteratorFila2(queue); // Look in queue for the waiting process
 			if(thread->tid == tid)
+			{
+				DeleteAtIterator(queue);
 				return thread;
+			}
 			NextFila2(queue);
 		}while(thread != NULL)
 	}
@@ -151,7 +157,7 @@ TCB_t* dispatcher()
 	TCB_t* nextThread = calloc(1, sizeof(TCB_t));
 	
 	FirstFila2(ready);
-	if( GetAtIteratorFila2 != NULL)
+	if( GetAtIteratorFila2(ready) != NULL)
 		{
 			nextThread = (TCB_*t)GetAtIteratorFila2(ready);
 			DeleteAtIterator(ready);
@@ -185,7 +191,6 @@ waitThread* searchWaitQueue(int tid)
 	{
 		wThread = GetAtIteratorFila2(waiting);
 		if( wThread->waitedTid == tid ) //Found thread
-			DeleteAtIteratorFila2(waiting);
 			return wThread;
 		NextFila2(waiting);
 	}
@@ -267,9 +272,10 @@ int cyield()
 			return -1;
 		}		
 	}
+
 	TCB_T *nextThread;
-	
 	running->state = PROCST_APTO;
+
 	if( AppendFila2(ready, running) == 0)
 	{
 		//Calls scheduler
