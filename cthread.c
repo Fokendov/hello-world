@@ -390,13 +390,15 @@ int cindentify(char *name, int size){
 			
 }
 
-/*	SEMAPHORE        */
-	     
+
+
+/*			SEMAPHORE 			*/
+
 
 int csuspend(int tid){
 	TCB_t* thread = calloc(1, sizeof(TCB_t*));
 
-	thread=removefromqueue(tid, ready);
+	thread=removeFromQueue(tid, ready);
 	
 	if(thread != NULL){
 		//thread was in ready queue
@@ -405,6 +407,8 @@ int csuspend(int tid){
 			printf("Error: could not insert thread in suspendedReady queue");
 			return -1;
 		}else{
+			//Thread is now in suspended ready queue
+			thread->state = PROCST_APTO_SUS;
 			return 0;
 		}
 	}
@@ -417,6 +421,7 @@ int csuspend(int tid){
 			printf("Error: could not insert thread in suspendedBlocked queue");
 			return -1;
 		}else{
+			thread->state = PROCST_BLOQ_SUS;
 			return 0;
 		}
 	}
@@ -437,6 +442,7 @@ int cresume(int tid){
 			printf("Error: could not insert thread in ready queue");
 			return -1;
 		}else{
+			thread->state = PROCST_APTO;
 			return 0;
 		}
 	}
@@ -449,6 +455,7 @@ int cresume(int tid){
 			printf("Error: could not insert thread in blocked queue");
 			return -1;
 		}else{
+			thread->state = PROCST_BLOQ;
 			return 0;
 		}
 	}
@@ -484,7 +491,7 @@ int cwait(csem_t *sem){
 			return 0;
 		}else if((sem->count)<=0){
 
-			//block current thread
+			//blocks current thread
 			running->state=PROCST_BLOQ;
 			if(AppendFila2(blocked, running)){
 				printf("Error: could not insert blocked thread in blocked queue");
@@ -517,12 +524,12 @@ int csignal(csem_t *sem){
 	if(sem->PFILA2!=NULL){
 		//checks if the queue is empty
 		if(FirstFila2(sem->PFILA2)){
-			//remove first thread from semaphore's queue
+			//removes first thread from semaphore's queue
 			firstThread_sem=(TCB_t*)GetAtIteratorFila2(sem->PFILA2);
 			DeleteAtIteratorFila2(sem->PFILA2);
 
 			//remove thread from blocked queue
-			if(removefromqueue(firstThread_sem->tid, blocked)==NULL){
+			if(removeFromQueue(firstThread_sem->tid, blocked)==NULL){
 				printf("Error: could not remove thread from blocked queue");
 				return -1;
 			}
@@ -550,7 +557,7 @@ int csignal(csem_t *sem){
 //remove thread with the given tid from the given queue
 //returns pointer to deleted tcb if deleted successfully
 //returns NULL if error
-TCB_T* removefromqueue(int tid, PFILA2 queue){
+TCB_T* removeFromQueue(int tid, PFILA2 queue){
 	TCB_t* iterator = calloc(1, sizeof(TCB_t*));
 
 	FirstFila2(queue);
@@ -568,5 +575,3 @@ TCB_T* removefromqueue(int tid, PFILA2 queue){
 	}
 	return NULL;
 }
-
-
